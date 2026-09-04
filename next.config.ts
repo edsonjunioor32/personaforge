@@ -5,7 +5,7 @@ const isGithubPagesBuild = process.env.GITHUB_PAGES === 'true';
 const nextConfig: NextConfig = isGithubPagesBuild
   ? {
       output: 'export',
-      assetPrefix: '/personaforge/',
+      basePath: '/personaforge',
       trailingSlash: true,
     }
   : {};
