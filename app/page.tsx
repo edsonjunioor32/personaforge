@@ -36,7 +36,6 @@ import {
   Zap,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
@@ -213,12 +212,13 @@ function AccentButton({
   className?: string;
 }) {
   return (
-    <Button
+    <button
+      type="button"
       onClick={onClick}
       className={`h-11 rounded-xl bg-[#c7f36b] px-5 font-semibold text-[#0b110c] shadow-[0_0_0_1px_rgba(199,243,107,.1),0_8px_30px_rgba(199,243,107,.12)] hover:bg-[#d5fa88] ${className}`}
     >
       {children}
-    </Button>
+    </button>
   );
 }
 
