@@ -31,21 +31,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build static site
-        run: npm run build
-        env:
-          GITHUB_PAGES: 'true'
-
-      - name: Normalize Pages asset paths
-        shell: bash
-        run: |
-          if [ -d dist/client/personaforge/_next ]; then
-            mv dist/client/personaforge/_next dist/client/_next
-            rmdir dist/client/personaforge
-          fi
+      - name: Build GitHub Pages SPA
+        run: ./node_modules/.bin/vite build --config vite.pages.config.ts
 
       - name: Verify homepage artifact
-        run: test -s dist/client/index.html
+        shell: bash
+        run: |
+          test -s dist/pages/index.html
+          grep -q '/personaforge/assets/' dist/pages/index.html
+          cp dist/pages/index.html dist/pages/404.html
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
@@ -53,7 +47,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: ./dist/client
+          path: ./dist/pages
 
   deploy:
     needs: build
