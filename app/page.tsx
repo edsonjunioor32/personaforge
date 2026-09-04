@@ -7,20 +7,27 @@ import {
   BarChart3,
   Bell,
   Bot,
+  CalendarDays,
+  Camera,
   Check,
   ChevronDown,
+  Clapperboard,
   CircleHelp,
   Copy,
+  Clock3,
   Download,
   FileText,
   Heart,
   Home as HomeIcon,
   ImagePlus,
   LayoutGrid,
+  BriefcaseBusiness,
   Menu,
   MoreHorizontal,
   Plus,
+  RefreshCw,
   Search,
+  Send,
   Settings,
   Sparkles,
   Star,
@@ -34,7 +41,98 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 
-type View = 'landing' | 'dashboard' | 'wizard' | 'result';
+type View = 'landing' | 'dashboard' | 'wizard' | 'result' | 'content';
+
+type SocialPlatform = 'Instagram' | 'TikTok' | 'LinkedIn';
+
+const socialProfiles = [
+  { name: 'Luma Vale', handle: '@lumavale', niche: 'design e rotina criativa' },
+  {
+    name: 'Norte Studio',
+    handle: '@nortestudio.co',
+    niche: 'branding para founders',
+  },
+  {
+    name: 'Rafa Bento',
+    handle: '@rafabento',
+    niche: 'café, livros e slow living',
+  },
+];
+
+const socialPlatforms: Array<{
+  name: SocialPlatform;
+  description: string;
+  icon: typeof Camera;
+}> = [
+  { name: 'Instagram', description: 'Carrossel e legenda', icon: Camera },
+  { name: 'TikTok', description: 'Roteiro curto', icon: Clapperboard },
+  {
+    name: 'LinkedIn',
+    description: 'Post de autoridade',
+    icon: BriefcaseBusiness,
+  },
+];
+
+const postGoals = ['Engajar', 'Educar', 'Vender'];
+const postFormats = ['Carrossel', 'Reel / vídeo', 'Texto curto'];
+const postTones = ['Próximo', 'Direto', 'Provocador'];
+
+function buildSocialPost({
+  profileName,
+  platform,
+  goal,
+  format,
+  tone,
+  topic,
+  variant,
+}: {
+  profileName: string;
+  platform: SocialPlatform;
+  goal: string;
+  format: string;
+  tone: string;
+  topic: string;
+  variant: number;
+}) {
+  const profile = socialProfiles.find(({ name }) => name === profileName);
+  const subject = topic.trim() || 'criar com mais consistência';
+  const hooks = [
+    `O jeito mais simples de melhorar ${subject} sem deixar tudo mais complicado.`,
+    `Se ${subject} parece difícil, talvez você esteja começando pelo lugar errado.`,
+    `Uma ideia para colocar ${subject} em prática ainda hoje:`,
+  ];
+  const bodies = [
+    `Para ${profile?.niche ?? 'criar com intenção'}, eu volto sempre para três perguntas: o que precisa ficar claro, o que merece a sua voz e qual é o próximo passo possível. Quando a ideia passa por esse filtro, o conteúdo deixa de ser só presença e começa a construir reconhecimento.`,
+    `Não é sobre publicar mais. É sobre transformar uma observação real em uma conversa que alguém queira continuar. Escolha um ponto de vista, conte o que mudou na prática e deixe espaço para a pessoa se enxergar nessa história.`,
+    `Comece pequeno: uma cena, uma escolha e uma frase que você defenderia mesmo sem aplauso. Esse recorte já é suficiente para criar algo útil, com personalidade e com espaço para evoluir depois.`,
+  ];
+  const ctas = {
+    Engajar:
+      'Salve para testar depois e me conte: qual parte faz mais sentido para você?',
+    Educar: 'Envie para alguém que está tentando organizar essa mesma ideia.',
+    Vender:
+      'Se quiser aplicar isso no seu projeto, me chama e eu te mostro o próximo passo.',
+  };
+  const hashtags = {
+    Instagram: '#criatividade #posicionamento #conteudocomproposito',
+    TikTok: '#criadores #conteudo #marcaPessoal',
+    LinkedIn: '#marcaPessoal #estrategia #comunicacao',
+  };
+  const formatLine =
+    format === 'Reel / vídeo'
+      ? 'Roteiro: abra com a frase acima, desenvolva um exemplo e feche com a pergunta.'
+      : format === 'Carrossel'
+        ? 'Estrutura sugerida: capa com o gancho, três telas com a ideia e uma última tela com o convite.'
+        : 'Escreva como quem abre uma conversa: uma ideia clara, um exemplo concreto e um próximo passo.';
+  const toneLine =
+    tone === 'Direto'
+      ? 'Sem rodeios, com clareza e uma opinião que dá para aplicar.'
+      : tone === 'Provocador'
+        ? 'A provocação aqui não é barulho: é uma pergunta que muda o ângulo de quem lê.'
+        : 'Com uma voz próxima, lúcida e humana, sem parecer um anúncio.';
+
+  return `${hooks[variant % hooks.length]}\n\n${bodies[variant % bodies.length]}\n\n${formatLine} ${toneLine}\n\n${ctas[goal as keyof typeof ctas]}\n\n${hashtags[platform]}`;
+}
 
 const profileCards = [
   {
@@ -142,6 +240,12 @@ function Landing({ onOpen }: { onOpen: () => void }) {
           <a href="#planos" className="transition-colors hover:text-white">
             Planos
           </a>
+          <button
+            onClick={onOpen}
+            className="transition-colors hover:text-white"
+          >
+            Criar conteúdo
+          </button>
         </nav>
         <div className="flex items-center gap-3">
           <button
@@ -158,19 +262,21 @@ function Landing({ onOpen }: { onOpen: () => void }) {
       <section className="relative z-10 mx-auto grid max-w-[1240px] gap-14 px-6 pb-20 pt-12 lg:grid-cols-[.92fr_1.08fr] lg:items-center lg:px-8 lg:pb-28 lg:pt-20">
         <div className="max-w-[590px]">
           <Badge className="mb-6 rounded-full border border-[#2c3b2c] bg-[#111a13] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[.17em] text-[#c7f36b]">
-            IA para posicionamento
+            INFLUENCER SINTÉTICO · PRIMEIRO VÍDEO GRÁTIS
           </Badge>
           <h1 className="max-w-[640px] text-[clamp(2.8rem,6vw,5.65rem)] font-semibold leading-[.96] tracking-[-.07em] text-[#f4f8f1]">
-            Sua presença digital,{' '}
-            <span className="text-[#c7f36b]">com intenção.</span>
+            Crie seu influencer{' '}
+            <span className="text-[#c7f36b]">sintético.</span>
           </h1>
           <p className="mt-7 max-w-[480px] text-[17px] leading-7 text-[#a2afa3]">
-            Transforme o que você sabe em um perfil que soa como você — claro,
-            distinto e pronto para ser lembrado.
+            Voz, imagem e vídeo no mesmo lugar. Crie um personagem consistente,
+            gere publicações prontas e mantenha suas redes ativas sem precisar
+            aparecer.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-4">
             <AccentButton onClick={onOpen}>
-              Criar meu perfil <Sparkles className="ml-2 h-4 w-4" />
+              Criar meu primeiro vídeo grátis{' '}
+              <Sparkles className="ml-2 h-4 w-4" />
             </AccentButton>
             <button
               onClick={onOpen}
@@ -192,8 +298,8 @@ function Landing({ onOpen }: { onOpen: () => void }) {
               ))}
             </div>
             <span>
-              <strong className="font-semibold text-[#d5ded4]">2.400+</strong>{' '}
-              perfis com mais clareza
+              <strong className="font-semibold text-[#d5ded4]">250M</strong>{' '}
+              views geradas por IA
             </span>
           </div>
         </div>
@@ -208,7 +314,7 @@ function Landing({ onOpen }: { onOpen: () => void }) {
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-[#c7f36b]" />
                 <span className="font-mono text-[9px] uppercase tracking-[.2em] text-[#879789]">
-                  Profile / 01
+                  Influencer / 01
                 </span>
               </div>
               <div className="flex gap-1.5">
@@ -221,24 +327,24 @@ function Landing({ onOpen }: { onOpen: () => void }) {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-[9px] uppercase tracking-[.15em] text-[#748276]">
-                    Seu posicionamento
+                    Seu personagem
                   </span>
                   <span className="rounded-full bg-[#263326] px-2 py-1 font-mono text-[9px] text-[#c7f36b]">
-                    92%
+                    pronto
                   </span>
                 </div>
                 <div className="rounded-2xl border border-[#344137] bg-[#1a241b] p-4">
                   <p className="font-mono text-[9px] uppercase tracking-[.13em] text-[#7e8e7e]">
-                    Nome de perfil
+                    Nome do influencer
                   </p>
                   <p className="mt-2 text-lg font-semibold tracking-[-.04em] text-white">
                     Luma Vale
                   </p>
                   <p className="mt-1 text-[11px] text-[#9eaca0]">
-                    design, vida real & intenção
+                    rosto, voz e estilo consistentes
                   </p>
                 </div>
-                {['Tom de voz', 'Público', 'Canais'].map((label, index) => (
+                {['Voz', 'Formato', 'Distribuição'].map((label, index) => (
                   <div
                     key={label}
                     className="rounded-2xl border border-[#2b382d] bg-[#151e16] p-4"
@@ -249,9 +355,9 @@ function Landing({ onOpen }: { onOpen: () => void }) {
                     <p className="mt-2 text-[11px] text-[#d6e0d4]">
                       {
                         [
-                          'Próximo e lúcido',
-                          'Pessoas criando com propósito',
-                          'Instagram · TikTok',
+                          'Natural e reconhecível',
+                          'Vídeo curto · vertical',
+                          'Instagram · TikTok · YouTube',
                         ][index]
                       }
                     </p>
@@ -264,7 +370,7 @@ function Landing({ onOpen }: { onOpen: () => void }) {
                     Preview
                   </span>
                   <span className="font-mono text-[9px] text-[#6d786e]">
-                    INSTAGRAM
+                    VÍDEO 01 · PREVIEW
                   </span>
                 </div>
                 <div className="mt-12 flex items-center gap-3">
@@ -275,38 +381,37 @@ function Landing({ onOpen }: { onOpen: () => void }) {
                   </div>
                 </div>
                 <p className="mt-7 max-w-[240px] text-[22px] font-semibold leading-[1.05] tracking-[-.05em]">
-                  Design que cabe na vida real.
+                  Um personagem que publica por você.
                 </p>
                 <p className="mt-3 max-w-[235px] text-[11px] leading-5 text-[#576258]">
-                  Ideias sobre criar com presença, intenção e um pouco menos de
-                  ruído.
+                  Roteiro, voz e imagem gerados juntos. Pronto para postar.
                 </p>
                 <div className="mt-8 flex items-center gap-2 text-[10px] font-semibold">
                   <span className="rounded-full bg-[#d5e4cc] px-2.5 py-1.5">
-                    design systems
+                    sem edição
                   </span>
                   <span className="rounded-full bg-[#d5e4cc] px-2.5 py-1.5">
-                    slow growth
+                    zero marca d&apos;água
                   </span>
                 </div>
               </div>
             </div>
             <div className="flex items-center justify-between border-t border-[#263127] px-5 py-4 sm:px-7">
               <span className="text-[10px] text-[#7c8a7d]">
-                Gerado com 30 créditos
+                Gerado automaticamente
               </span>
               <button
                 onClick={onOpen}
                 className="flex items-center gap-1.5 text-[10px] font-semibold text-[#c7f36b]"
               >
-                Editar perfil <ArrowRight className="h-3.5 w-3.5" />
+                Criar publicação <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
           <div className="absolute bottom-0 right-0 hidden w-[190px] rounded-2xl border border-[#344235] bg-[#151c16]/95 p-4 shadow-2xl backdrop-blur sm:block">
             <div className="flex items-center justify-between">
               <span className="font-mono text-[9px] uppercase tracking-[.12em] text-[#849184]">
-                Voice match
+                Consistência
               </span>
               <Bot className="h-4 w-4 text-[#c7f36b]" />
             </div>
@@ -317,7 +422,7 @@ function Landing({ onOpen }: { onOpen: () => void }) {
               <div className="h-full w-[92%] rounded-full bg-[#c7f36b]" />
             </div>
             <p className="mt-2 text-[10px] leading-4 text-[#819081]">
-              Sua voz está consistente em todos os canais.
+              O mesmo personagem em qualquer ângulo.
             </p>
           </div>
         </div>
@@ -330,18 +435,18 @@ function Landing({ onOpen }: { onOpen: () => void }) {
           {[
             [
               '01',
-              'Conte o que só você sabe',
-              'Um briefing guiado transforma suas ideias soltas em uma base clara.',
+              'Crie o personagem.',
+              'Defina rosto, voz e estilo. A mesma identidade aparece em vídeo após vídeo.',
             ],
             [
               '02',
-              'Escolha o clima',
-              'Presets de estilo ajudam a visualidade a acompanhar a intenção.',
+              'Gere o vídeo.',
+              'Escreva o roteiro ou peça uma ideia. A plataforma junta imagem, voz e lip-sync.',
             ],
             [
               '03',
-              'Saia com algo usável',
-              'Bio, posicionamento e direção prontos para entrar no mundo.',
+              'Publique em escala.',
+              'Organize a fila, revise e publique no ritmo que sua audiência espera.',
             ],
           ].map(([number, title, copy]) => (
             <div key={number} className="border-l border-[#334333] pl-5">
@@ -358,6 +463,234 @@ function Landing({ onOpen }: { onOpen: () => void }) {
           ))}
         </div>
       </section>
+      <section
+        id="exemplos"
+        className="relative z-10 mx-auto max-w-[1240px] border-t border-[#202b21] px-6 py-16 lg:px-8"
+      >
+        <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+          <div>
+            <p className="eyebrow">Casos de uso</p>
+            <h2 className="mt-3 max-w-[620px] text-3xl font-semibold tracking-[-.06em] text-white sm:text-4xl">
+              Um personagem. Ideias infinitas.
+            </h2>
+          </div>
+          <p className="max-w-[340px] text-sm leading-6 text-[#829083]">
+            O pipeline se adapta ao seu nicho: educação, lifestyle, produto ou
+            qualquer assunto que mereça uma voz própria.
+          </p>
+        </div>
+        <div className="mt-8 grid gap-4 md:grid-cols-2">
+          {[
+            {
+              name: 'Guto Explica',
+              handle: '@gutoexplica',
+              description:
+                'Um creator sintético para transformar assuntos complexos em vídeos diários.',
+              followers: '60,5K',
+              views: '+1,7M',
+              variant: 'avatar-orange',
+            },
+            {
+              name: 'Monge da Paz',
+              handle: '@mongedapaz',
+              description:
+                'Sabedoria e filosofia em vídeos curtos, sem câmera e sem rosto humano.',
+              followers: '120K',
+              views: '+1,1M',
+              variant: 'avatar-violet',
+            },
+          ].map((example) => (
+            <article key={example.name} className="example-card">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <span className={`avatar avatar-lg ${example.variant}`}>
+                    AI
+                  </span>
+                  <div>
+                    <h3 className="text-base font-semibold text-white">
+                      {example.name}
+                    </h3>
+                    <p className="mt-1 text-[11px] text-[#819081]">
+                      {example.handle}
+                    </p>
+                  </div>
+                </div>
+                <span className="rounded-full border border-[#3a4d38] bg-[#1b291c] px-2 py-1 font-mono text-[9px] text-[#c7f36b]">
+                  100% IA
+                </span>
+              </div>
+              <p className="mt-6 max-w-[390px] text-sm leading-6 text-[#a2afa3]">
+                {example.description}
+              </p>
+              <div className="mt-7 flex gap-8 border-t border-[#2a382d] pt-4">
+                <div>
+                  <strong className="block text-lg font-semibold tracking-[-.05em] text-white">
+                    {example.followers}
+                  </strong>
+                  <span className="font-mono text-[9px] uppercase tracking-[.12em] text-[#718071]">
+                    seguidores
+                  </span>
+                </div>
+                <div>
+                  <strong className="block text-lg font-semibold tracking-[-.05em] text-white">
+                    {example.views}
+                  </strong>
+                  <span className="font-mono text-[9px] uppercase tracking-[.12em] text-[#718071]">
+                    visualizações
+                  </span>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+      <section
+        id="planos"
+        className="relative z-10 mx-auto max-w-[1240px] border-t border-[#202b21] px-6 py-16 lg:px-8"
+      >
+        <div className="max-w-[590px]">
+          <p className="eyebrow">Planos</p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-[-.06em] text-white sm:text-4xl">
+            Escolha o ritmo da sua criação.
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-[#829083]">
+            Comece com seu primeiro vídeo grátis. Depois, pague apenas pelo que
+            gerar e publique sem marca d&apos;água.
+          </p>
+        </div>
+        <div className="mt-8 grid gap-4 lg:grid-cols-3">
+          {[
+            {
+              name: 'Starter',
+              price: 'R$ 49,90',
+              credits: '1.000',
+              detail: 'para validar seu personagem e postar com frequência',
+            },
+            {
+              name: 'Pro',
+              price: 'R$ 128,00',
+              credits: '3.000',
+              detail: 'para rodar 1 a 3 influencers em ritmo diário',
+              popular: true,
+            },
+            {
+              name: 'Scale',
+              price: 'R$ 573,00',
+              credits: '15.000',
+              detail: 'para agências e operações multi-personagem',
+            },
+          ].map((plan) => (
+            <article
+              key={plan.name}
+              className={`pricing-card ${plan.popular ? 'pricing-card-featured' : ''}`}
+            >
+              {plan.popular && (
+                <span className="pricing-badge">mais popular</span>
+              )}
+              <p className="text-sm font-semibold text-white">{plan.name}</p>
+              <p className="mt-5 text-3xl font-semibold tracking-[-.07em] text-white">
+                {plan.price}
+                <span className="ml-1 text-xs font-normal text-[#748174]">
+                  /mês
+                </span>
+              </p>
+              <div className="mt-6 space-y-3 text-xs text-[#a5b2a6]">
+                <p>
+                  <Check className="mr-2 inline h-3.5 w-3.5 text-[#c7f36b]" />
+                  {plan.credits} créditos por mês
+                </p>
+                <p>
+                  <Check className="mr-2 inline h-3.5 w-3.5 text-[#c7f36b]" />≈{' '}
+                  {plan.name === 'Starter'
+                    ? '5'
+                    : plan.name === 'Pro'
+                      ? '16'
+                      : '78'}{' '}
+                  min de vídeo
+                </p>
+                {plan.name !== 'Starter' && (
+                  <p>
+                    <Check className="mr-2 inline h-3.5 w-3.5 text-[#c7f36b]" />
+                    postagem automática em até {plan.name === 'Pro'
+                      ? '3'
+                      : '8'}{' '}
+                    contas
+                  </p>
+                )}
+              </div>
+              <p className="mt-5 min-h-10 text-[10px] leading-4 text-[#748174]">
+                {plan.detail}
+              </p>
+              <button
+                onClick={onOpen}
+                className={`mt-6 flex h-10 w-full items-center justify-center rounded-xl text-xs font-semibold ${plan.popular ? 'bg-[#c7f36b] text-[#101510] hover:bg-[#d5fa88]' : 'border border-[#3a4d38] text-[#c7f36b] hover:bg-[#1b291c]'}`}
+              >
+                Começar agora
+              </button>
+            </article>
+          ))}
+        </div>
+      </section>
+      <section
+        id="faq"
+        className="relative z-10 mx-auto max-w-[860px] border-t border-[#202b21] px-6 py-16 lg:px-8"
+      >
+        <div className="text-center">
+          <p className="eyebrow">FAQ</p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-[-.06em] text-white sm:text-4xl">
+            Perguntas frequentes.
+          </h2>
+        </div>
+        <div className="mt-8 divide-y divide-[#28352b] border-y border-[#28352b]">
+          {[
+            [
+              'Preciso pagar para testar?',
+              'Não. O primeiro vídeo é grátis e você não precisa cadastrar cartão.',
+            ],
+            [
+              'Preciso saber programar?',
+              'Não. Você cria o personagem, escreve o briefing e organiza as publicações dentro da plataforma.',
+            ],
+            [
+              'Preciso aparecer ou gravar vídeo?',
+              'Não. O personagem é sintético: imagem, voz e roteiro são gerados sem ligar uma câmera.',
+            ],
+            [
+              'Funciona em qualquer nicho?',
+              'Sim. O pipeline é o mesmo; mudam o personagem, a voz e o roteiro.',
+            ],
+            [
+              'Como funcionam os créditos?',
+              'Cada geração consome créditos. Você controla o gasto pelo formato, duração e quantidade de vídeos.',
+            ],
+            [
+              'Posso cancelar quando quiser?',
+              'Sim. O cancelamento é feito pelo painel e seus créditos seguem disponíveis até o fim do ciclo.',
+            ],
+          ].map(([question, answer]) => (
+            <details key={question} className="group py-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-left text-sm font-medium text-[#dce7d9]">
+                {question}
+                <ChevronDown className="h-4 w-4 shrink-0 text-[#849184] transition-transform group-open:rotate-180" />
+              </summary>
+              <p className="mt-3 max-w-[700px] text-xs leading-6 text-[#849184]">
+                {answer}
+              </p>
+            </details>
+          ))}
+        </div>
+      </section>
+      <footer className="relative z-10 border-t border-[#202b21] px-6 py-10 lg:px-8">
+        <div className="mx-auto flex max-w-[1240px] flex-col justify-between gap-5 text-[10px] text-[#718071] sm:flex-row sm:items-center">
+          <div>
+            <Wordmark />
+            <p className="mt-3">
+              Death of the internet · crie seu influencer sintético.
+            </p>
+          </div>
+          <p>© 2026 PersonaForge · blog · privacidade · termos</p>
+        </div>
+      </footer>
     </main>
   );
 }
@@ -374,6 +707,7 @@ function AppSidebar({
   const items = [
     { label: 'Visão geral', icon: HomeIcon, target: 'dashboard' as View },
     { label: 'Meus perfis', icon: LayoutGrid, target: 'dashboard' as View },
+    { label: 'Criar conteúdo', icon: Send, target: 'content' as View },
     { label: 'Templates', icon: WandSparkles, target: 'wizard' as View },
     { label: 'Analytics', icon: BarChart3, target: 'dashboard' as View },
   ];
@@ -416,6 +750,7 @@ function AppSidebar({
           {items.map(({ label, icon: Icon, target }) => {
             const active =
               (view === 'dashboard' && label === 'Visão geral') ||
+              (view === 'content' && label === 'Criar conteúdo') ||
               (view === 'wizard' && label === 'Templates') ||
               (view === 'result' && label === 'Meus perfis');
             return (
@@ -528,9 +863,11 @@ function AppShell({
               <span className="text-[#dbe6d8]">
                 {view === 'wizard'
                   ? 'Novo perfil'
-                  : view === 'result'
-                    ? 'Luma Vale'
-                    : 'Visão geral'}
+                  : view === 'content'
+                    ? 'Criar conteúdo'
+                    : view === 'result'
+                      ? 'Luma Vale'
+                      : 'Visão geral'}
               </span>
             </div>
             <div className="sm:hidden">
@@ -579,9 +916,11 @@ function ProfileAvatar({
 function Dashboard({
   onNew,
   onProfile,
+  onContent,
 }: {
   onNew: () => void;
   onProfile: () => void;
+  onContent: () => void;
 }) {
   const [query, setQuery] = useState('');
   const [favorites, setFavorites] = useState<string[]>(['Luma Vale']);
@@ -602,9 +941,14 @@ function Dashboard({
             Três ideias estão esperando para ganhar forma.
           </p>
         </div>
-        <AccentButton onClick={onNew}>
-          <Plus className="mr-2 h-4 w-4" /> Novo perfil
-        </AccentButton>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={onContent} className="secondary-action">
+            <Send className="mr-2 h-3.5 w-3.5" /> Criar conteúdo
+          </button>
+          <AccentButton onClick={onNew}>
+            <Plus className="mr-2 h-4 w-4" /> Novo perfil
+          </AccentButton>
+        </div>
       </div>
       <div className="mt-9 grid gap-4 md:grid-cols-3">
         <div className="stat-card">
@@ -804,6 +1148,522 @@ function Dashboard({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+type QueuedPost = {
+  id: number;
+  platform: SocialPlatform;
+  label: string;
+  title: string;
+  text: string;
+};
+
+function ContentStudio({ onBack }: { onBack: () => void }) {
+  const [profileName, setProfileName] = useState('Luma Vale');
+  const [platform, setPlatform] = useState<SocialPlatform>('Instagram');
+  const [goal, setGoal] = useState('Engajar');
+  const [format, setFormat] = useState('Carrossel');
+  const [tone, setTone] = useState('Próximo');
+  const [topic, setTopic] = useState(
+    'como manter consistência sem perder a própria voz',
+  );
+  const [variants, setVariants] = useState<string[]>([]);
+  const [selectedVariant, setSelectedVariant] = useState(0);
+  const [generatedPost, setGeneratedPost] = useState('');
+  const [queue, setQueue] = useState<QueuedPost[]>([]);
+  const [generating, setGenerating] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState('');
+  const [scheduleAt, setScheduleAt] = useState('2026-09-05T09:00');
+
+  const profile = socialProfiles.find(({ name }) => name === profileName);
+  const activePlatform = socialPlatforms.find(({ name }) => name === platform);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('personaforge-post-queue');
+      if (stored) {
+        window.setTimeout(() => {
+          setQueue(JSON.parse(stored) as QueuedPost[]);
+        }, 0);
+      }
+    } catch {
+      /* local storage can be unavailable in restricted previews */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('personaforge-post-queue', JSON.stringify(queue));
+    } catch {
+      /* local storage can be unavailable in restricted previews */
+    }
+  }, [queue]);
+
+  const generate = (sequence = false) => {
+    setGenerating(true);
+    setStatus('');
+    window.setTimeout(() => {
+      const nextVariants = [0, 1, 2].map((variant) =>
+        buildSocialPost({
+          profileName,
+          platform,
+          goal,
+          format,
+          tone,
+          topic,
+          variant,
+        }),
+      );
+      setVariants(nextVariants);
+      setSelectedVariant(0);
+      setGeneratedPost(nextVariants[0]);
+      if (sequence) {
+        const labels = ['Amanhã · 09:00', 'Quinta · 12:30', 'Sexta · 18:00'];
+        setQueue(
+          nextVariants.map((text, index) => ({
+            id: Date.now() + index,
+            platform,
+            label: labels[index],
+            title: `${topic.trim() || 'Nova ideia'} · V${index + 1}`,
+            text,
+          })),
+        );
+        setStatus('Sequência de 3 publicações criada e organizada.');
+      } else {
+        setStatus(
+          '3 variações criadas. Escolha uma e ajuste antes de publicar.',
+        );
+      }
+      setGenerating(false);
+    }, 900);
+  };
+
+  const chooseVariant = (index: number) => {
+    setSelectedVariant(index);
+    setGeneratedPost(variants[index]);
+  };
+
+  const copyPost = async () => {
+    try {
+      await navigator.clipboard?.writeText(generatedPost);
+    } catch {
+      /* clipboard can be unavailable in preview */
+    }
+    setCopied(true);
+    setStatus('Publicação copiada para a área de transferência.');
+    window.setTimeout(() => setCopied(false), 1800);
+  };
+
+  const downloadPost = () => {
+    const file = new Blob([generatedPost], {
+      type: 'text/plain;charset=utf-8',
+    });
+    const url = URL.createObjectURL(file);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${profileName.toLowerCase().replaceAll(' ', '-')}-post.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setStatus('Arquivo da publicação baixado.');
+  };
+
+  const addToQueue = () => {
+    if (!generatedPost) {
+      setStatus('Gere uma publicação antes de adicionar à fila.');
+      return;
+    }
+    setQueue((current) => [
+      ...current,
+      {
+        id: Date.now(),
+        platform,
+        label: 'Próxima vaga · 16:30',
+        title: topic.trim() || 'Nova ideia de conteúdo',
+        text: generatedPost,
+      },
+    ]);
+    setStatus('Publicação adicionada à fila automática.');
+  };
+
+  return (
+    <div className="mx-auto max-w-[1400px] p-5 lg:p-9">
+      <button
+        onClick={onBack}
+        className="mb-5 flex items-center gap-2 text-xs text-[#7d8b7e] hover:text-white"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" /> Voltar para visão geral
+      </button>
+      <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+        <div>
+          <p className="eyebrow">Content engine</p>
+          <h1 className="page-title mt-3">
+            Publique ideias que{' '}
+            <span className="text-[#c7f36b]">soam como você.</span>
+          </h1>
+          <p className="mt-2 max-w-[590px] text-sm leading-6 text-[#839083]">
+            Escolha um perfil, conte o que você quer dizer e receba uma
+            publicação pronta — com variações, formato e fila de distribuição.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 rounded-xl border border-[#2c3c2f] bg-[#141e15] px-3 py-2 text-[11px] text-[#9aaa9a]">
+          <Zap className="h-3.5 w-3.5 text-[#c7f36b]" />8 créditos por
+          publicação
+        </div>
+      </div>
+
+      <div className="mt-8 grid gap-5 xl:grid-cols-[.82fr_1.18fr]">
+        <section className="panel">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="eyebrow">Briefing rápido</p>
+              <h2 className="mt-2 section-title">Dê direção para a ideia</h2>
+            </div>
+            <span className="rounded-full border border-[#334736] bg-[#1d2b1d] px-2.5 py-1 font-mono text-[9px] text-[#c7f36b]">
+              01 / 03
+            </span>
+          </div>
+
+          <div className="mt-6 space-y-5">
+            <div>
+              <label htmlFor="content-profile" className="field-label">
+                Perfil que vai publicar
+              </label>
+              <select
+                id="content-profile"
+                value={profileName}
+                onChange={(event) => setProfileName(event.target.value)}
+                className="studio-select mt-2"
+              >
+                {socialProfiles.map((item) => (
+                  <option key={item.name}>{item.name}</option>
+                ))}
+              </select>
+              <p className="mt-2 text-[10px] text-[#718071]">
+                Voz ativa: {profile?.niche ?? 'conteúdo com intenção'}
+              </p>
+            </div>
+
+            <div>
+              <span className="field-label">Onde publicar</span>
+              <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                {socialPlatforms.map(({ name, description, icon: Icon }) => (
+                  <button
+                    key={name}
+                    onClick={() => setPlatform(name)}
+                    className={`platform-card ${platform === name ? 'platform-card-active' : ''}`}
+                    aria-pressed={platform === name}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{name}</span>
+                    <small>{description}</small>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="content-topic" className="field-label">
+                Sobre o que você quer falar?
+              </label>
+              <Textarea
+                id="content-topic"
+                value={topic}
+                onChange={(event) => setTopic(event.target.value)}
+                className="mt-2 min-h-[96px] resize-none rounded-xl border-[#2b392e] bg-[#131a14] text-xs leading-5 text-white placeholder:text-[#657366]"
+                placeholder="Ex.: como começar a criar conteúdo sem copiar ninguém"
+              />
+              <p className="mt-2 text-right font-mono text-[9px] text-[#667467]">
+                {topic.length} / 180
+              </p>
+            </div>
+
+            <div>
+              <span className="field-label">Objetivo</span>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {postGoals.map((item) => (
+                  <button
+                    key={item}
+                    onClick={() => setGoal(item)}
+                    className={`tone-chip ${goal === item ? 'tone-chip-active' : ''}`}
+                    aria-pressed={goal === item}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <span className="field-label">Formato</span>
+              <div className="mt-2 grid gap-2">
+                {postFormats.map((item, index) => (
+                  <button
+                    key={item}
+                    onClick={() => setFormat(item)}
+                    className={`select-card min-h-0 py-3 ${format === item ? 'select-card-active' : ''}`}
+                    aria-pressed={format === item}
+                  >
+                    <span className="select-card-icon">
+                      {index === 0 ? (
+                        <LayoutGrid className="h-4 w-4" />
+                      ) : index === 1 ? (
+                        <Clapperboard className="h-4 w-4" />
+                      ) : (
+                        <FileText className="h-4 w-4" />
+                      )}
+                    </span>
+                    <span>
+                      <strong>{item}</strong>
+                      <small>
+                        {index === 0
+                          ? 'Gancho + desenvolvimento + CTA'
+                          : index === 1
+                            ? 'Hook + roteiro em 30 segundos'
+                            : 'Legenda enxuta e compartilhável'}
+                      </small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <span className="field-label">Tom da sua voz</span>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {postTones.map((item) => (
+                  <button
+                    key={item}
+                    onClick={() => setTone(item)}
+                    className={`tone-chip ${tone === item ? 'tone-chip-active' : ''}`}
+                    aria-pressed={tone === item}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[#2b392e] bg-[#131a14] p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="field-label">Primeira publicação</p>
+                  <p className="mt-1 text-[10px] text-[#718071]">
+                    Escolha quando a fila começa a rodar.
+                  </p>
+                </div>
+                <Clock3 className="h-4 w-4 text-[#c7f36b]" />
+              </div>
+              <input
+                aria-label="Data e hora da primeira publicação"
+                type="datetime-local"
+                value={scheduleAt}
+                onChange={(event) => setScheduleAt(event.target.value)}
+                className="studio-select mt-3"
+              />
+              <p className="mt-2 text-[10px] text-[#718071]">
+                Fuso horário local · revisão antes do envio
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-7 border-t border-[#28352b] pt-5">
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <AccentButton onClick={() => generate()} className="flex-1">
+                {generating ? (
+                  <>
+                    <span className="spinner mr-2" /> Criando publicação...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" /> Gerar publicação
+                  </>
+                )}
+              </AccentButton>
+              <button
+                onClick={() => generate(true)}
+                disabled={generating}
+                className="flex h-11 items-center justify-center rounded-xl border border-[#3a4d38] px-4 text-xs font-semibold text-[#c7f36b] hover:bg-[#1b291c] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <CalendarDays className="mr-2 h-4 w-4" /> Gerar 3 para a semana
+              </button>
+            </div>
+            {status && (
+              <output
+                className="mt-3 block text-[10px] leading-4 text-[#9eb09d]"
+                aria-live="polite"
+              >
+                <Check className="mr-1 inline h-3 w-3 text-[#c7f36b]" />
+                {status}
+              </output>
+            )}
+          </div>
+        </section>
+
+        <section className="panel">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="eyebrow">Editor + preview</p>
+              <h2 className="mt-2 section-title">Veja antes de publicar</h2>
+            </div>
+            {generatedPost && (
+              <span className="flex items-center gap-1.5 rounded-full bg-[#203120] px-2.5 py-1 font-mono text-[9px] text-[#c7f36b]">
+                <Check className="h-3 w-3" /> pronto para revisar
+              </span>
+            )}
+          </div>
+
+          {!generatedPost ? (
+            <div className="content-empty mt-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#263825] text-[#c7f36b]">
+                <Send className="h-5 w-5" />
+              </div>
+              <h3 className="mt-4 text-sm font-semibold text-white">
+                Sua próxima publicação começa aqui
+              </h3>
+              <p className="mt-2 max-w-[330px] text-center text-xs leading-5 text-[#778578]">
+                O motor cruza o briefing com a voz do perfil e cria três
+                caminhos diferentes para a mesma ideia.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
+                {variants.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => chooseVariant(index)}
+                    className={`variant-tab ${selectedVariant === index ? 'variant-tab-active' : ''}`}
+                  >
+                    Variação {index + 1}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-4 grid gap-4 lg:grid-cols-[.92fr_1.08fr]">
+                <div className="post-preview-card">
+                  <div className="flex items-center justify-between border-b border-[#d4dfd1] pb-4">
+                    <div className="flex items-center gap-2.5">
+                      <ProfileAvatar variant="luma" initial="LV" size="sm" />
+                      <div>
+                        <p className="text-[11px] font-semibold text-[#1b251c]">
+                          {profileName}
+                        </p>
+                        <p className="text-[9px] text-[#758176]">
+                          {profile?.handle} · agora
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-semibold uppercase tracking-[.1em] text-[#687568]">
+                      {activePlatform?.name}
+                    </span>
+                  </div>
+                  <div className="mt-5 whitespace-pre-line text-[12px] leading-5 text-[#273128]">
+                    {generatedPost}
+                  </div>
+                  <div className="mt-5 flex items-center gap-4 border-t border-[#d4dfd1] pt-4 text-[9px] text-[#758176]">
+                    <span>♡ 248</span>
+                    <span>◌ 31 comentários</span>
+                    <span>↗ compartilhar</span>
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="generated-post" className="field-label">
+                    Texto editável
+                  </label>
+                  <Textarea
+                    id="generated-post"
+                    value={generatedPost}
+                    onChange={(event) => setGeneratedPost(event.target.value)}
+                    className="mt-2 min-h-[300px] resize-none rounded-xl border-[#2b392e] bg-[#131a14] text-xs leading-5 text-[#dce8da]"
+                  />
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button onClick={copyPost} className="secondary-action">
+                      <Copy className="mr-2 h-3.5 w-3.5" />
+                      {copied ? 'Copiado' : 'Copiar texto'}
+                    </button>
+                    <button onClick={downloadPost} className="secondary-action">
+                      <Download className="mr-2 h-3.5 w-3.5" /> Baixar .txt
+                    </button>
+                    <button
+                      onClick={() => generate()}
+                      className="secondary-action"
+                    >
+                      <RefreshCw className="mr-2 h-3.5 w-3.5" /> Nova variação
+                    </button>
+                  </div>
+                  <button
+                    onClick={addToQueue}
+                    className="mt-3 flex h-10 w-full items-center justify-center rounded-xl bg-[#203120] text-xs font-semibold text-[#c7f36b] hover:bg-[#2a4029]"
+                  >
+                    <CalendarDays className="mr-2 h-3.5 w-3.5" />
+                    Adicionar à fila automática
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </section>
+      </div>
+
+      <section className="panel mt-5">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <p className="eyebrow">Automação</p>
+            <h2 className="mt-2 section-title">Fila de publicações</h2>
+            <p className="mt-1 text-xs text-[#7f8d81]">
+              Organize a semana agora e revise tudo em um só lugar.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 text-[10px] text-[#7f8d81]">
+            <span className="flex items-center gap-1.5">
+              <Clock3 className="h-3.5 w-3.5 text-[#c7f36b]" />
+              {queue.length} na fila
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Check className="h-3.5 w-3.5 text-[#c7f36b]" />
+              revisão manual
+            </span>
+          </div>
+        </div>
+        {queue.length === 0 ? (
+          <div className="mt-5 rounded-2xl border border-dashed border-[#344735] bg-[#131a14] p-5 text-center">
+            <p className="text-xs font-medium text-[#c1d0c0]">
+              Ainda não há publicações agendadas.
+            </p>
+            <p className="mt-1 text-[10px] text-[#718071]">
+              Use “Gerar 3 para a semana” para criar sua primeira sequência
+              automática.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            {queue.map((item) => (
+              <article key={item.id} className="queue-card">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-[10px] font-semibold text-[#c7f36b]">
+                    <CalendarDays className="h-3.5 w-3.5" /> {item.label}
+                  </span>
+                  <span className="rounded-full bg-[#273629] px-2 py-1 text-[9px] text-[#9daf9c]">
+                    {item.platform}
+                  </span>
+                </div>
+                <h3 className="mt-4 line-clamp-2 text-xs font-semibold text-[#e2ece0]">
+                  {item.title}
+                </h3>
+                <p className="mt-2 line-clamp-3 whitespace-pre-line text-[10px] leading-4 text-[#7e8d80]">
+                  {item.text}
+                </p>
+                <div className="mt-4 flex items-center gap-1.5 border-t border-[#2a382d] pt-3 text-[9px] text-[#748174]">
+                  <Check className="h-3 w-3 text-[#c7f36b]" /> pronto para
+                  revisão
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
@@ -1484,10 +2344,50 @@ export default function Home() {
       },
       { signal: lifecycle.signal },
     );
+    modelContext.registerTool(
+      {
+        name: 'start_social_post_creation',
+        title: 'Criar publicação para redes sociais',
+        description:
+          'Abre o Content Engine para gerar uma publicação social com briefing, variações e fila automática.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            topic: { type: 'string', minLength: 3 },
+            platform: {
+              type: 'string',
+              enum: ['Instagram', 'TikTok', 'LinkedIn'],
+            },
+          },
+          required: ['topic'],
+          additionalProperties: false,
+        },
+        annotations: { readOnlyHint: false, untrustedContentHint: false },
+        execute: (input) => {
+          const data =
+            typeof input === 'object' && input !== null
+              ? (input as { topic?: unknown; platform?: unknown })
+              : {};
+          const topic = typeof data.topic === 'string' ? data.topic.trim() : '';
+          if (topic.length < 3)
+            throw new Error('Informe um tema com pelo menos 3 caracteres.');
+          setView('content');
+          return {
+            status: 'ready',
+            view: 'content',
+            topic,
+            platform: data.platform ?? 'Instagram',
+          };
+        },
+      },
+      { signal: lifecycle.signal },
+    );
     return () => lifecycle.abort();
   }, [view]);
   const content =
-    view === 'wizard' ? (
+    view === 'content' ? (
+      <ContentStudio onBack={() => navigate('dashboard')} />
+    ) : view === 'wizard' ? (
       <Wizard
         onBack={() => navigate('dashboard')}
         onComplete={() => navigate('result')}
@@ -1498,6 +2398,7 @@ export default function Home() {
       <Dashboard
         onNew={() => navigate('wizard')}
         onProfile={() => navigate('result')}
+        onContent={() => navigate('content')}
       />
     );
   if (view === 'landing')
