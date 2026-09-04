@@ -41,6 +41,10 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 
+// The landing page is fully client-side and does not depend on request data.
+// Marking it static lets GitHub Pages receive a real index.html during export.
+export const dynamic = 'force-static';
+
 type View = 'landing' | 'dashboard' | 'wizard' | 'result' | 'content';
 
 type SocialPlatform = 'Instagram' | 'TikTok' | 'LinkedIn';

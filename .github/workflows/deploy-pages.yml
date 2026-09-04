@@ -36,6 +36,9 @@ jobs:
         env:
           GITHUB_PAGES: 'true'
 
+      - name: Verify homepage artifact
+        run: test -s dist/client/index.html
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
