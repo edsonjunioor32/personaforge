@@ -1,0 +1,29 @@
+{
+  "name": "ring-pm-team",
+  "displayName": "Ring PM Team",
+  "description": "Pre-dev planning workflows: 4-gate and 8-gate orchestrators for PRD, TRD, OpenAPI contracts, schema design, and a phased plan. 14 skills + 4 research agents.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Lerian Studio",
+    "email": "fred@lerian.studio"
+  },
+  "homepage": "https://github.com/lerianstudio/ring/tree/main/pm-team",
+  "repository": "https://github.com/lerianstudio/ring",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "product",
+    "pre-dev",
+    "planning",
+    "prd",
+    "trd",
+    "api-design",
+    "data-model",
+    "workflow",
+    "feature-planning",
+    "phases-and-epics"
+  ],
+  "skills": "./skills/",
+  "agents": "./agents/",
+  "hooks": "./hooks/hooks.json"
+}

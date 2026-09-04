@@ -1,0 +1,405 @@
+# Ring Workflows Reference
+
+This document contains detailed workflow instructions for adding skills, agents, hooks, and other Ring components.
+
+---
+
+## Adding a New Skill
+
+### For Core Ring Skills
+
+1. Create directory:
+
+   ```bash
+   mkdir default/skills/your-skill-name/
+   ```
+
+2. Write `default/skills/your-skill-name/SKILL.md` with frontmatter:
+
+   ```yaml
+   ---
+   name: ring:your-skill-name
+   description: Single paragraph (≤500 chars target, 1,536 cap). States WHAT the skill does, WHEN to invoke, and WHEN to skip.
+   ---
+
+   # Your Skill Name
+
+   ## When to use
+   - Specific condition that mandates this skill
+   - Another trigger condition
+
+   ## Skip when
+   - When NOT to use → alternative skill
+   - Another exclusion
+   ```
+
+   Required frontmatter fields: `name`, `description`. Optional: `argument-hint`, `allowed-tools`, `model`, `disable-model-invocation`, `user-invocable`, `paths`. Trigger/skip/sequence/related content lives in body H2 sections — see [docs/FRONTMATTER_SCHEMA.md](FRONTMATTER_SCHEMA.md) for the full schema.
+
+3. Test with:
+
+   ```
+   Skill tool: "ring:testing-skills-with-subagents"
+   ```
+
+4. Skill auto-loads next SessionStart via `default/hooks/generate-skills-ref.py`
+
+### Production Readiness Audit (ring-default)
+
+The **auditing-production-readiness** skill (`ring:auditing-production-readiness`) evaluates codebase production readiness across **44 dimensions** (43 base + 1 conditional multi-tenant) in 5 categories. **Invocation:** use the Skill tool or the `/ring:auditing-production-readiness` command when preparing for production, conducting security/quality reviews, or assessing technical debt. **Batch behavior:** runs 10 explorer agents per batch and appends results incrementally to a single report file (`docs/audits/production-readiness-{date}-{time}.md`) to avoid context bloat. **Output:** scored report (0–430 base, max 440 with multi-tenant) with severity ratings and standards cross-reference. Implementation details: [default/skills/auditing-production-readiness/SKILL.md](../default/skills/auditing-production-readiness/SKILL.md).
+
+### For Product/Team-Specific Skills
+
+1. Create plugin directory:
+
+   ```bash
+   mkdir -p product-xyz/{skills,agents,commands,hooks}
+   ```
+
+2. Add to `.claude-plugin/marketplace.json`:
+
+   ```json
+   {
+     "name": "ring-product-xyz",
+     "description": "Product XYZ specific skills",
+     "version": "0.1.0",
+     "source": "./product-xyz"
+   }
+   ```
+
+3. Follow same skill structure as default plugin
+
+---
+
+## Modifying Hooks
+
+1. Edit `default/hooks/hooks.json` for trigger configuration
+
+2. Scripts in `default/hooks/`:
+
+   - `session-start.sh` - Runs on startup
+   - `claude-md-bootstrap.sh` - CLAUDE.md context
+
+3. Test hook output:
+
+   ```bash
+   bash default/hooks/session-start.sh
+   ```
+
+   Must output JSON with `additionalContext` field
+
+4. SessionStart hooks run on:
+
+   - `startup|resume`
+   - `clear|compact`
+
+5. Note: `${CLAUDE_PLUGIN_ROOT}` resolves to plugin root (`default/` for core plugin)
+
+---
+
+## Plugin-Specific Using-\* Skills
+
+Each plugin auto-loads a `using-{plugin}` skill via SessionStart hook to introduce available agents and capabilities:
+
+### Default Plugin
+
+- `ring:using-ring` → ORCHESTRATOR principle, mandatory workflow
+- Always injected, always mandatory
+- Located: `default/skills/using-ring/SKILL.md`
+
+### Ring Dev Team Plugin
+
+- `ring:using-dev-team` → specialist developer agents
+- Auto-loads when ring-dev-team plugin is enabled
+- Located: `dev-team/skills/using-dev-team/SKILL.md`
+- Agents (invoke as `ring:{agent-name}`):
+  - ring:backend-go
+  - ring:backend-ts
+  - ring:bff-ts
+  - ring:ui-designer
+  - ring:frontend
+  - ring:helm
+  - ring:prompt-reviewer
+  - ring:ui-engineer
+
+### Ring PM Team Plugin
+
+- `ring:using-pm-team` → Pre-dev workflow skills (8-gate Large / 4-gate Small)
+- Auto-loads when ring-pm-team plugin is enabled
+- Located: `pm-team/skills/using-pm-team/SKILL.md`
+- Skills: 7 gate skills + 2 orchestrators + standalone utilities; both tracks end with `ring:writing-plans` (default plugin)
+
+### Ring TW Team Plugin
+
+- `using-tw-team` → 3 technical writing agents for documentation
+- Auto-loads when ring-tw-team plugin is enabled
+- Located: `tw-team/skills/using-tw-team/SKILL.md`
+- Agents (invoke as `ring:{agent-name}`):
+  - ring:guide-writer (guides)
+  - ring:api-writer (API reference)
+  - ring:docs-reviewer (quality review)
+- Commands: reviewing-docs
+
+### Hook Configuration
+
+- Each plugin has: `{plugin}/hooks/hooks.json` + `{plugin}/hooks/session-start.sh`
+- SessionStart hook executes, outputs additionalContext with skill reference
+- Only plugins in marketplace.json get loaded (conditional)
+
+---
+
+## Creating Review Agents
+
+1. Add to `dev-team/agents/your-reviewer.md` with a documented `## Output Format` body section (see [AGENT_DESIGN.md](AGENT_DESIGN.md))
+
+2. Reference in `default/skills/reviewing-code/SKILL.md` under `Default Reviewers` or `Conditional Specialist Reviewers`
+
+3. Dispatch via Task tool:
+
+   ```
+   subagent_type="ring:your-reviewer"
+   ```
+
+4. **MUST run in parallel** with other reviewers (single message, multiple Tasks)
+
+---
+
+## Pre-Dev Workflow
+
+### Simple Features (<2 days): `/ring:planning-small-features` — 4 gates
+
+```
+├── Gate 0: pm-team/skills/researching-features
+│   └── Output: docs/pre-dev/feature/research.md (3 parallel agents: repo-, web-, docs-researcher)
+├── Gate 1: pm-team/skills/writing-prds
+│   └── Output: docs/pre-dev/feature/prd.md
+├── Gate 2: pm-team/skills/writing-trds
+│   └── Output: docs/pre-dev/feature/trd.md
+└── Gate 3: default/skills/writing-plans (invoked by orchestrator)
+    └── Output: docs/pre-dev/feature/plan.md (phased plan, living document; Phase 1 detailed into tasks)
+```
+
+### Complex Features (≥2 days): `/ring:planning-large-features` — 8 gates
+
+```
+├── Gate 0: pm-team/skills/researching-features
+│   └── Output: docs/pre-dev/feature/research.md (3 parallel agents: repo-, web-, docs-researcher)
+├── Gate 1: pm-team/skills/writing-prds
+│   └── Output: docs/pre-dev/feature/prd.md
+├── Gate 2: pm-team/skills/mapping-feature-relationships
+│   └── Output: docs/pre-dev/feature/feature-map.md (defines phasing; phases mirror plan.md one-to-one)
+├── Gate 3: pm-team/skills/writing-trds
+│   └── Output: docs/pre-dev/feature/trd.md
+├── Gate 4: pm-team/skills/designing-api-contracts
+│   └── Output: docs/pre-dev/feature/openapi.yaml (OpenAPI 3.1)
+├── Gate 5: pm-team/skills/designing-data-model
+│   └── Output: docs/pre-dev/feature/schema.sql (or schema.prisma — stack-native)
+├── Gate 6: pm-team/skills/pinning-dependency-versions
+│   └── Output: docs/pre-dev/feature/dependencies.md
+└── Gate 7: default/skills/writing-plans (invoked by orchestrator)
+    └── Output: docs/pre-dev/feature/plan.md (all phases with epics; Phase 1 epics detailed into tasks)
+```
+
+When the feature has UI, the orchestrator recommends running `ring:validating-ux-completeness` (standalone, with the product-designer agent) between the PRD and TRD — not a gate, not tracked in workflow state.
+
+---
+
+## Development Cycle (lean — cadence-classified)
+
+`ring:running-dev-cycle` is now a lean backend flow. Backend implementation owns TDD, coverage, docker-compose/local runtime, basic health/observability checks, and delivery verification in Gate 0.
+
+**Task cadence** (runs for each task `Task N.M.T`, or for the epic itself if no task breakdown):
+- Gate 0 — Implementation (includes Delivery Verification exit check inline)
+
+**Epic cadence** (runs once per epic, after all its tasks complete Gate 0):
+- Gate 8 — Review (9 default reviewers plus triggered specialists on cumulative epic diff)
+- Gate 9 — Validation (aggregates EVERY task's acceptance criteria + one human approval, after Gate 8 passes)
+
+**Phase cadence** (runs once per phase transition — rolling wave):
+- Step 11.5 — Phase Boundary (close phase in plan.md, user checkpoint, elaborate next phase's epics into tasks against the codebase as it now exists)
+
+**Cycle cadence** (runs once per cycle at the end):
+- Multi-Tenant Verify
+- `ring:writing-dev-reports` aggregate
+- Final Commit
+
+Inputs for epic-cadence gates receive UNION of changed files across all tasks of the epic. Multi-tenant adaptation is integrated into Gate 0. All gates are MANDATORY. Invoke with `/ring:running-dev-cycle [plan-file]` or Skill tool `ring:running-dev-cycle`. State is persisted to `docs/ring:running-dev-cycle/current-cycle.json` (schema v2.0.0: phases → epics → tasks). See `dev-team/skills/shared-patterns/gate-cadence-classification.md` for full taxonomy and [dev-team/skills/running-dev-cycle/SKILL.md](../dev-team/skills/running-dev-cycle/SKILL.md) for full protocol.
+
+---
+
+## Parallel Code Review
+
+### Instead of sequential (180 min)
+
+```python
+review1  = Task("ring:code-reviewer")               # 20 min
+review2  = Task("ring:logic-reviewer")     # 20 min
+review3  = Task("ring:security-reviewer")           # 20 min
+review4  = Task("ring:test-reviewer")               # 20 min
+review5  = Task("ring:nil-reviewer")         # 20 min
+review6  = Task("ring:dead-code-reviewer")          # 20 min
+review7  = Task("ring:perf-reviewer")        # 20 min
+review8  = Task("ring:tenancy-reviewer")       # 20 min
+review9  = Task("ring:commons-reviewer")        # 20 min
+```
+
+### Run parallel (20 min total)
+
+```python
+Task.parallel([
+    ("ring:code-reviewer", prompt),
+    ("ring:logic-reviewer", prompt),
+    ("ring:security-reviewer", prompt),
+    ("ring:test-reviewer", prompt),
+    ("ring:nil-reviewer", prompt),
+    ("ring:dead-code-reviewer", prompt),
+    ("ring:perf-reviewer", prompt),
+    ("ring:tenancy-reviewer", prompt),
+    ("ring:commons-reviewer", prompt)
+])  # Single message, 9 default tool calls; add triggered specialists in same batch
+```
+
+### Key rule
+
+Always dispatch all 9 default reviewers in a single message with multiple Task tool calls. Add `ring:obs-reviewer`, `ring:systemplane-reviewer`, or `ring:streaming-reviewer` to that same batch only when their stack triggers match.
+
+---
+
+## Related Documents
+
+- [CLAUDE.md](../CLAUDE.md) - Main project instructions (references this document)
+- [AGENT_DESIGN.md](AGENT_DESIGN.md) - Agent output formats
+- [PROMPT_ENGINEERING.md](PROMPT_ENGINEERING.md) - Language patterns
+
+---
+
+## Reviewer-Pool Synchronization
+
+When adding or removing a code review agent in the `ring:reviewing-code` pool:
+
+**⛔ SEVEN-FILE REVIEWER-POOL SYNCHRONIZATION RULE:**
+
+1. Edit `default/skills/reviewing-code/SKILL.md` — default reviewer table, conditional trigger table, dynamic dispatch count, status semantics, output format Reviewer Verdicts table
+2. Edit `default/skills/reviewing-code/reviewers/dispatch-prompts.md` — add/remove default Task blocks or conditional Task blocks, renumber default tasks, and update eligibility rules
+3. Edit reviewer agent files in `dev-team/agents/*-reviewer.md` — active code-review reviewers live only in the dev-team plugin
+4. Edit `dev-team/hooks/validate-gate-progression.sh` — 9 default reviewer verdict requirements plus optional conditional verdict requirements
+5. Edit `dev-team/skills/running-dev-cycle/SKILL.md` and `dev-team/skills/running-dev-cycle/gates/gate-8-review.md` — Gate 8 state shape and dynamic reviewer references
+6. Edit shared patterns that enumerate reviewers — `default/skills/shared-patterns/reviewer-slicing-strategy.md`, `default/skills/shared-patterns/reviewer-orchestrator-boundary.md`, `dev-team/skills/shared-patterns/shared-anti-rationalization.md`, `dev-team/skills/shared-patterns/gate-cadence-classification.md`
+7. Edit public/plugin docs — `CLAUDE.md`, `README.md`, `MANUAL.md`, `ARCHITECTURE.md`, `.claude-plugin/marketplace.json`, and installer messages
+
+**All files in same commit** — MUST NOT update one without the others.
+
+**Note:** `dev-team/skills/using-dev-team/SKILL.md` does NOT enumerate reviewers and does NOT contain backend Gate 8 or frontend Gate 7 tables. Do not invent such tables; that skill describes specialist developer agents, not the review pool. If you need a reviewer enumeration there in the future, add it explicitly — until then, skip it.
+
+**⛔ ADDITIONAL SWEEP (secondary consumers, should also update same commit):**
+
+- `default/skills/using-ring/SKILL.md` — entry-point skill reminder
+- `default/skills/writing-plans/SKILL.md` — plan output format instructing plans to dispatch reviewers
+- `ring-install.sh` — user-facing install advertisement (interactive menu + `--claude` / `--factory` / `--opencode` / `--codex` / `--all`)
+- `docs/PROMPT_ENGINEERING.md` — canonical example of strong language
+- `docs/WORKFLOWS.md` — workflow documentation
+- `MANUAL.md`, `README.md`, `ARCHITECTURE.md` — public-facing docs
+- `.claude-plugin/marketplace.json` — plugin descriptions + keywords
+- Any dev-team skill that dispatches `ring:reviewing-code` (e.g., `ring:adding-multi-tenancy`, `ring:migrating-to-lib-systemplane`)
+
+**⛔ CHECKLIST: Adding/Removing a Reviewer**
+
+```
+Before committing changes to the reviewing-code pool:
+
+[ ] 1. Updated reviewing-code/SKILL.md (dispatch + state + output format)?
+[ ] 2. Updated frontmatter description in the new/removed reviewer agent (generic "Runs in parallel with other reviewers")?
+[ ] 3. Updated validate-gate-progression.sh (9 default verdicts + optional conditional verdicts)?
+[ ] 4. Updated running-dev-cycle/SKILL.md (Gate 8 + all "N reviewers" refs)?
+[ ] 5. Updated shared-patterns files enumerating reviewers?
+[ ] 6. Swept secondary consumers (using-ring, writing-plans, docs, marketplace.json)?
+[ ] 7. Grep sanity: grep -rn "N reviewer|all N" --include="*.md" --include="*.sh" returns zero stale counts?
+
+If any checkbox is no → Fix before committing.
+```
+
+**Why this rule exists:** In 2026-04-18 dogfood, we discovered that when `perf-reviewer` was added to the pool some time prior, 7+ files were never updated. Adding 2 more reviewers then cascaded into ~65 stale references across 22 files. This rule makes the propagation explicit.
+
+---
+
+## Documentation Sync Checklist
+
+**When modifying agents, skills, or hooks, check all these files for consistency:**
+
+```
+Root Documentation:
+├── CLAUDE.md              # Project instructions (source of truth)
+├── MANUAL.md              # Team quick reference guide
+├── README.md              # Public documentation
+└── ARCHITECTURE.md        # Architecture diagrams
+
+Reference Documentation:
+├── docs/PROMPT_ENGINEERING.md  # Assertive language patterns
+├── docs/AGENT_DESIGN.md        # Output formats, standards compliance
+├── docs/FRONTMATTER_SCHEMA.md  # Canonical YAML frontmatter fields
+└── docs/WORKFLOWS.md           # Detailed workflow instructions
+
+Plugin Hooks (inject context at session start):
+├── default/hooks/session-start.sh
+├── dev-team/hooks/session-start.sh
+├── pm-team/hooks/session-start.sh
+└── tw-team/hooks/session-start.sh
+
+Using-* Skills (plugin introductions):
+├── default/skills/using-ring/SKILL.md
+├── dev-team/skills/using-dev-team/SKILL.md
+├── pm-team/skills/using-pm-team/SKILL.md
+└── tw-team/skills/using-tw-team/SKILL.md
+```
+
+**Checklist when adding/modifying:**
+
+- [ ] CLAUDE.md updated? → AGENTS.md auto-updates (symlink)
+- [ ] AGENTS.md symlink broken? → Restore with `ln -sf CLAUDE.md AGENTS.md`
+- [ ] Agent added? Update hooks, using-\* skills, MANUAL.md, README.md
+- [ ] Skill added? Update CLAUDE.md architecture, hooks if plugin-specific
+- [ ] Plugin added? Create hooks/, using-\* skill, update marketplace.json
+- [ ] Names changed? Search repo: `grep -r "old-name" --include="*.md" --include="*.sh"`
+
+**Naming Convention Enforcement:**
+
+- [ ] All agent invocations use `ring:agent-name` format
+- [ ] All skill invocations use `ring:skill-name` format
+- [ ] No bare agent/skill names in invocation contexts (must have ring: prefix)
+- [ ] No deprecated `ring-{plugin}:` format used
+
+---
+
+## Content Duplication Prevention
+
+Before adding any content to prompts, skills, agents, or documentation:
+
+1. **SEARCH FIRST**: `grep -r "keyword" --include="*.md"` — Check if content already exists
+2. **If content exists** → **REFERENCE it**, DO NOT duplicate. Use: `See [file](path) for details`
+3. **If adding new content** → Add to the canonical source per table below
+4. **MUST NOT copy** content between files — link to the single source of truth
+
+| Information Type      | Canonical Source                                         |
+| --------------------- | -------------------------------------------------------- |
+| Critical rules        | CLAUDE.md                                                |
+| Language patterns     | docs/PROMPT_ENGINEERING.md                               |
+| Agent schemas         | docs/AGENT_DESIGN.md                                     |
+| Frontmatter fields    | docs/FRONTMATTER_SCHEMA.md                               |
+| Workflows             | docs/WORKFLOWS.md                                        |
+| Plugin overview       | README.md                                                |
+| Agent requirements    | CLAUDE.md (Agent Modification section)                   |
+| Shared skill patterns | `{plugin}/skills/shared-patterns/*.md`                   |
+| Standards modules     | `dev-team/docs/standards/{stack}/{module}.md`            |
+
+**Shared Patterns Rule (MANDATORY):**
+When content is reused across multiple skills within a plugin:
+
+1. **Extract to shared-patterns**: Create `{plugin}/skills/shared-patterns/{pattern-name}.md`
+2. **Reference from skills**: Use `See [shared-patterns/{name}.md](../shared-patterns/{name}.md)`
+3. **MUST NOT duplicate**: If the same table/section appears in 2+ skills → extract to shared-patterns
+
+| Shared Pattern Type           | Location                                                      |
+| ----------------------------- | ------------------------------------------------------------- |
+| Pressure resistance scenarios | `{plugin}/skills/shared-patterns/pressure-resistance.md`      |
+| Anti-rationalization tables   | `{plugin}/skills/shared-patterns/anti-rationalization.md`     |
+| Execution report format       | `{plugin}/skills/shared-patterns/execution-report.md`         |
+| Standards coverage table      | `{plugin}/skills/shared-patterns/standards-coverage-table.md` |

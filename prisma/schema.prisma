@@ -1,0 +1,51 @@
+// PersonaForge — Prisma schema
+// Personas are the core entity: a crafted AI character with a generated
+// system prompt that can be chatted with. Messages persist conversations.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Persona {
+  id            String   @id @default(cuid())
+  name          String
+  emoji         String   @default("🧩")
+  role          String
+  ageRange      String?
+  background    String?
+  // JSON strings (SQLite cannot store lists/primitives directly)
+  personality   String? // Big Five: {openness,conscientiousness,extraversion,agreeableness,neuroticism} 0-100
+  communication String? // {formality,directness,warmth,humor} 0-100
+  expertise     String? // string[] JSON
+  values        String? // string[] JSON
+  goals         String? // string[] JSON
+  tone          String?
+  voiceStyle    String?
+  quirks        String?
+  systemPrompt  String?
+  greeting      String?
+  colorTheme    String? // accent token name: cyan | violet | emerald | amber | rose
+  tags          String? // comma-separated
+  quality       Int?    // 0-100 readiness snapshot
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  messages      Message[]
+
+  @@index([updatedAt])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  personaId String
+  role      String   // user | assistant
+  content   String
+  createdAt DateTime @default(now())
+  persona   Persona  @relation(fields: [personaId], references: [id], onDelete: Cascade)
+
+  @@index([personaId, createdAt])
+}
